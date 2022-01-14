@@ -1,13 +1,14 @@
 #include <M5StickC.h>
 #include <Arduino.h>
 
-const int pomodoroTime = 25;
-const int breakTime = 5;
-const int longBreakTime = 25;
-const int pomodoroNumber = 4;
+const int pomodoroTime = 25; //How long in minuites the pomodoros should be.
+const int breakTime = 5; //How long in minuites the breaks should be.
+const int longBreakTime = 30; //How long in minuites the final 'long break' should be.
+const int pomodoroNumber = 4; //How many Pomodoros in a cycle.
 int stage;
 int countdown;
 bool onBreak;
+bool onFinal;
 bool alarming;
 String displayText = "";
 
@@ -35,7 +36,7 @@ void breakStep(){
 }
 
 void longBreakStep(){
-  onBreak = 1;
+  onFinal = 1;
   countdown = longBreakTime;
   displayText = "Relax";
 }
@@ -67,9 +68,11 @@ void reset(){
 }
 
 void hardReset(){
+  M5.Lcd.fillScreen(BLACK);
   stage = 0;
+  onFinal = 0;
   pomodoroStep();
-   for (int i = 0; i < pomodoroNumber; i++) {
+  for (int i = 0; i < pomodoroNumber; i++) {
     drawPomodoro(i,0);
   }
   reset();
@@ -98,7 +101,9 @@ void loop() {
 
   if(TimeStruct.Minutes == countdown - 1 && TimeStruct.Seconds == 59 && !alarming){
     drawPomodoro(stage,1);
-    if(onBreak){
+    if (onFinal){
+      hardReset();
+    } else if(onBreak){
       pomodoroStep();
       stage++;
     } else if(stage < (pomodoroNumber - 1)){
